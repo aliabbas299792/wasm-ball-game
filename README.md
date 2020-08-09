@@ -9,3 +9,5 @@ To serve the files first run `node install` or `yarn` in the main directory, and
 The blue tiles are made using instancing and the ball is rotated via quaternions.
 
 A live example (might take a while to load): [Test](https://erewhon.xyz/3dexperiments/test/)
+
+![alt text](https://github.com/aliabbas299792/wasm-ball-game/blob/master/screenshot.jpg?raw=true)
