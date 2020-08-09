@@ -1,0 +1,57 @@
+﻿<style>
+    html{
+        overflow: hidden;
+    }
+
+    *{
+        box-sizing: border-box;
+        padding: 0;
+        margin: 0;
+        background:#000;
+    }
+
+    canvas{
+        position: absolute;
+        top:50%;
+        left:50%;
+        transform: translate(-50%, -50%);
+        max-width: 100vw;
+        max-height: 100vh;
+    }
+</style>
+<canvas id="canvas" oncontextmenu="event.preventDefault()" height="0" width="0"></canvas>
+<!-- to start off with the height and width are set to 0 -->
+<script>
+    const files = ["assets/glsl/fragshader.glsl", "assets/glsl/vertexshader.glsl"];
+    const data = {};
+
+    for(const file of files){
+        fetch(file)
+            .then(res => res.text())
+            .then(res => data[file] = res);
+    }
+</script>
+<script src="library.js"></script>
+<script src="OpenGL_WASM_Project.js"></script>
+<script type='text/javascript'>
+  const canvas = document.getElementById('canvas');
+
+  Module.canvas = canvas;
+  Module.onRuntimeInitialized = () => {
+    setTimeout(() => {
+        resize()
+    }, 50); //delays the resize by 50ms to allow the initial sizing to occur
+  }
+
+  window.addEventListener('resize', resize);
+
+  function resize(){
+    const width = window.innerWidth;
+    const height = window.innerWidth < window.innerHeight ? window.innerWidth : window.innerHeight;
+
+    _setWindowSize(width*2, height*2); //sets the content to the correct size
+    //setting it to be 2x bigger than the actual viewport seems to get rid of the aliasing effect well
+
+    canvas.setAttribute("style", `width:${width}px; height:${height}px`); //sets canvas to be as big as the content inside it
+  }
+</script>
