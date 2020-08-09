@@ -7,3 +7,5 @@ To compile it for development, simply run `./compile.sh`, and for release just r
 To serve the files first run `node install` or `yarn` in the main directory, and then just run `node index.js` and go to `localhost:2000` to see it running.
 
 The blue tiles are made using instancing and the ball is rotated via quaternions.
+
+A live example (might take a while to load): [Test](https://erewhon.xyz/3dexperiments/test/)
