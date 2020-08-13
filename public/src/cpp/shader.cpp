@@ -1,6 +1,10 @@
 #include "header/shader.h"
 #include "header/helper.h"
 
+//initialise the static variables
+std::string shader::vertSource = "";
+std::string shader::fragSource = "";
+
 unsigned int shader::compileShader(const std::string& fileName, GLenum shader_type) {
   std::string sourceFile = readFile(fileName);
   const char* sourceCString = sourceFile.c_str();
@@ -30,7 +34,7 @@ unsigned int shader::compileFragmentShader(const std::string& fileName) {
   return compileShader(fileName, GL_FRAGMENT_SHADER);
 }
 
-shader::shader(const std::string& vertexShaderSourceLocation, const std::string& fragmentShaderSourceLocation) {
+void shader::init(const std::string& vertexShaderSourceLocation, const std::string& fragmentShaderSourceLocation) {
   const unsigned int vertexShader = compileVertexShader(vertexShaderSourceLocation);
   const unsigned int fragmentShader = compileFragmentShader(fragmentShaderSourceLocation);
 
@@ -62,10 +66,6 @@ shader::shader(const std::string& vertexShaderSourceLocation, const std::string&
 unsigned int shader::useShaderProgram() {
   glUseProgram(this->shaderProgramID);
   return this->shaderProgramID;
-}
-
-void shader::deleteShaderProgram() {
-  glDeleteProgram(this->shaderProgramID);
 }
 
 void shader::setUniform1f(std::string uniformName, float value) {

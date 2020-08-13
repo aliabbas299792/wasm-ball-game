@@ -11,6 +11,8 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#include "ecs/ecs.h"
+
 struct vertex {
     glm::vec3 position;
     glm::vec3 normal;
@@ -31,7 +33,7 @@ public:
     std::vector<texture> textures;
 
     mesh(std::vector<vertex> vertices, std::vector<unsigned int> indices, std::vector<texture> textures);
-    void draw(shader* ShaderProgram);
+    void draw();
 
     ~mesh(){
       vertices.clear();
@@ -39,9 +41,9 @@ public:
       textures.clear();
     }
 
-    void setInstancing(const std::vector<glm::mat4> *transformationMatrices);
+    void setInstancing(const std::array<glm::mat4, MAX_ENTITIES> *transformationMatrices, unsigned int maxIndex);
 private:
-    unsigned int VAO, VBO, EBO, instancedVBO = -1, instances = 0; //render data
+    unsigned int VAO{}, VBO{}, EBO{}, instancedVBO = -1, instances = 0; //render data
 
     void setupMesh();
 };
@@ -56,14 +58,14 @@ private:
     int vertices = 0;
     int indices = 0;
 
-    void loadModel(std::string path);
+    void loadModel(const std::string& path);
     void processNode(aiNode *node, const aiScene *scene);
     mesh processMesh(aiMesh *mesh, const aiScene *scene);
-    std::vector<texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName);
+    std::vector<texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, const std::string& typeName);
 public:
-    model(std::string path = "");
-    void setInstancing(std::vector<glm::mat4> *transformationMatrices);
-    void draw(shader *ShaderProgram);
+    model(const std::string& path = "");
+    void setInstancing(const std::array<glm::mat4, MAX_ENTITIES> *transformationMatrices, unsigned int maxIndex);
+    void draw();
     ~model(){
       textures_loaded.clear();
       meshes.clear();

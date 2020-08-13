@@ -1,14 +1,18 @@
+#include <utility>
+
 #include "header/assimp.h"
 
 mesh::mesh(std::vector<vertex> vertices, std::vector<unsigned int> indices, std::vector<texture> textures) {
-  this->vertices = vertices;
-  this->indices = indices;
-  this->textures = textures;
+  this->vertices = std::move(vertices);
+  this->indices = std::move(indices);
+  this->textures = std::move(textures);
 
   setupMesh();
 }
 
-void mesh::draw(shader *ShaderProgram) {
+void mesh::draw() {
+  auto ShaderProgram = &shader::getInstance();
+
   unsigned int diffuseNumber = 1; //up to 3 diffuse textures
   unsigned int specularNumber = 1; //up to 3 specular textures
 
@@ -22,7 +26,10 @@ void mesh::draw(shader *ShaderProgram) {
     else if(name == "texture_specular")
       number = std::to_string(specularNumber++);
 
-    ShaderProgram->setUniform1f("material." + name + number, i); //sets the uniform and adds material. to the beginning
+    std::string matName = "material.";
+    matName += name;
+    matName += number;
+    ShaderProgram->setUniform1f(matName, (float)i); //sets the uniform and adds material. to the beginning
     glBindTexture(GL_TEXTURE_2D, textures[i].id);
   }
   glActiveTexture(GL_TEXTURE0); //resets the active texture back to 0
@@ -75,12 +82,12 @@ void mesh::setupMesh() {
   //an array of structs of size 10, where each struct has 3 elements is like an array of 30 elements sequential in memory
 }
 
-void mesh::setInstancing(const std::vector<glm::mat4> *transformationMatrices) {
+void mesh::setInstancing(const std::array<glm::mat4, MAX_ENTITIES> *transformationMatrices, unsigned int maxIndex) {
   if(instancedVBO == -1)
     glGenBuffers(1, &instancedVBO);
 
   glBindBuffer(GL_ARRAY_BUFFER, instancedVBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * transformationMatrices->size(), transformationMatrices->data(), GL_STATIC_DRAW); //look at the comment on (or around) line 53
+  glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * (maxIndex+1), transformationMatrices->data(), GL_STATIC_DRAW); //look at the comment on (or around) line 53
   glBindBuffer(GL_ARRAY_BUFFER, 0); //resets the array buffer binding
 
   //you can only have up to 4 elements per location, so a mat4 in GLSL uses 4 consecutive locations for its 16 elements, so in our case locations 2, 3, 4 and 5 are used
@@ -94,7 +101,7 @@ void mesh::setInstancing(const std::vector<glm::mat4> *transformationMatrices) {
     glVertexAttribDivisor(3 + i, 1); //this location will be incremented upon
   }
 
-  instances = transformationMatrices->size(); //one additional instance per transformation matrix
+  instances = maxIndex+1; //one additional instance per transformation matrix
 
   glBindVertexArray(0); //unbinds the vertex array
 }

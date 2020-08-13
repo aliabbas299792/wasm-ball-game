@@ -1,18 +1,18 @@
 #include "header/assimp.h"
 #include "header/helper.h"
 
-model::model(std::string path) {
-  if(path == "") return; //this is for initialising class members
+model::model(const std::string& path) {
+  if(path.empty()) return; //this is for initialising class members
   loadModel(path);
 }
 
-void model::draw(shader *ShaderProgram) {
+void model::draw() {
   for(auto &mesh : meshes){
-    mesh.draw(ShaderProgram);
+    mesh.draw();
   }
 }
 
-void model::loadModel(std::string path) {
+void model::loadModel(const std::string& path) {
   Assimp::Importer importer;
   const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
   //ensures the entire model consists of triangles and that each vertex has a normal, and flips textures if they are imported upside down
@@ -28,16 +28,16 @@ void model::loadModel(std::string path) {
   processNode(scene->mRootNode, scene); //processNode recursively traverses through the assimp structure to get all the relavent data
 }
 
-std::vector<texture> model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName) {
+std::vector<texture> model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, const std::string& typeName) {
   std::vector<texture> textures;
   for(unsigned int i = 0; i < mat->GetTextureCount(type); i++){
     aiString string;
     mat->GetTexture(type, i, &string);
     bool skip = false;
 
-    for(unsigned int j = 0; j < textures_loaded.size(); j++){
-      if(std::strcmp(textures_loaded[j].path.data(), string.C_Str()) == 0){ //returns 0 if the contents of both strings are equal
-        textures.push_back(textures_loaded[j]);
+    for(auto &texture : textures_loaded){
+      if(std::strcmp(texture.path.data(), string.C_Str()) != 0){
+        textures.push_back(texture);
         skip = true;
         break;
       }
@@ -60,12 +60,12 @@ std::vector<texture> model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
 }
 
 mesh model::processMesh(aiMesh *Mesh, const aiScene *scene) {
-  std::vector<vertex> vertices;
-  std::vector<unsigned int> indices;
+  std::vector<vertex> verticesLocal;
+  std::vector<unsigned int> indicesLocal;
   std::vector<texture> textures;
 
   for(unsigned int i = 0; i < Mesh->mNumVertices; i++){ //process vertex positions, normals and texture coordinates
-    vertex Vertex;
+    vertex Vertex{};
     Vertex.position = glm::vec3(
       Mesh->mVertices[i].x,
       Mesh->mVertices[i].y,
@@ -87,13 +87,13 @@ mesh model::processMesh(aiMesh *Mesh, const aiScene *scene) {
       Vertex.texCoords = glm::vec2(0.0f, 0.0f); //default texture coordinates
     }
 
-    vertices.push_back(Vertex);
+    verticesLocal.push_back(Vertex);
   }
 
   for(unsigned int i = 0;i < Mesh->mNumFaces; i++){ //populates the indices array
     aiFace face = Mesh->mFaces[i];
     for(unsigned int j = 0; j < face.mNumIndices; j++){
-      indices.push_back(face.mIndices[j]); //gets each index from each face and puts it into the indices array
+      indicesLocal.push_back(face.mIndices[j]); //gets each index from each face and puts it into the indices array
     }
   }
 
@@ -107,7 +107,7 @@ mesh model::processMesh(aiMesh *Mesh, const aiScene *scene) {
     textures.insert(textures.end(), specularMaps.begin(), specularMaps.end()); //inserts all the specular textures
   }
 
-  mesh ModelMesh(vertices, indices, textures); //return a mesh
+  mesh ModelMesh(verticesLocal, indicesLocal, textures); //return a mesh
 
   //increments the number of vertices and indices
   this->vertices += ModelMesh.vertices.size();
@@ -129,9 +129,9 @@ void model::processNode(aiNode *node, const aiScene *scene) { //this actually br
   }
 }
 
-void model::setInstancing(std::vector<glm::mat4> *transformationMatrices) {
+void model::setInstancing(const std::array<glm::mat4, MAX_ENTITIES> *transformationMatrices, unsigned int maxIndex) {
   for(auto &mesh : meshes){
-    mesh.setInstancing(transformationMatrices); //applies instancing stuff to each mesh
+    mesh.setInstancing(transformationMatrices, maxIndex); //applies instancing stuff to each mesh
   }
 }
 
